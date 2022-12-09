@@ -1,0 +1,23 @@
+#include<avr/io.h>
+#include"util/delay.h"
+
+void Timer1_CTC_Iint(unsigned short tick)
+{
+	TCCR1A=(1<<FOC1A)|(1<<FOC1B);//NON PWM
+	TCCR1B=(1<<WGM12)|(1<<CS12)|(1<<CS10);//CTC AND N=1024
+	TCNT1=0;//COUNTER INITIAL VALUE
+	OCR1=tick;
+}
+
+
+
+int main()
+{
+
+
+
+	while(1)
+	{
+
+	}
+}

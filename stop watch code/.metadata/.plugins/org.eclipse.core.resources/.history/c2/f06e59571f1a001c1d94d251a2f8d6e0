@@ -1,0 +1,67 @@
+#include<avr/io.h>
+#include"util/delay.h"
+#include<avr/interrupt.h>
+
+unsigned char g_tick =0;
+unsigned char HRS_COUNT=0;
+unsigned char MIN_COUNT=0;
+unsigned char SEC_COUNT=0;
+
+
+void Timer1_CTC_Iint(unsigned short tick)
+{
+	TCCR1A=(1<<FOC1A)|(1<<FOC1B);//NON PWM
+	TCCR1B=(1<<WGM12)|(1<<CS12)|(1<<CS10);//CTC AND N=1024
+	TCNT1=0;//COUNTER INITIAL VALUE
+	OCR1A=tick;//COMPARE VALUE
+	TIMSK |=(1<<OCIE1A);//ENABLE INTERRUPT COMPARE MATCH A
+	SREG |=(1<<7);//I-BIT ENABLE
+}
+
+void INT_0_1_2_Iint(void)
+{
+	DDRD &=(~(1<<PD2))&(~(1<<PD3))&(~(1<<PB2));//CONFIGURE ALL OF INT0, INT1 ANDINT2
+	MCUCR|=(1<<ISC01)|(1<<ISC10)|(1<<ISC11);//ENABLE INT0 WITH FALLING EDGE AND INT1 WITH THE RISING EDGE
+	MCUCSR&=~(1<<ISC2);//ENABLE INT2 WITH THE FALLING EDGE
+	GICR|=(1<<INT1)|(1<<INT0)|(1<<INT2);//ENABLE ETERNAL INT0 , INT1 AND INT2
+	SREG|=(1<<7);//I-BIT ENABLE
+	DDRD  &= (~(1<<PD3));  //INT1/PD3 I/P PIN
+	DDRD  &= (~(1<<PD2));  //INT1/PD2 I/P PIN
+	DDRB  &= (~(1<<PB2));  //INT2/PB2 I/P PIN
+	PORTD |=(1<<PD2);   //enable internal pull up in INT0
+	PORTB |=(1<<PB2);   //enable internal pull up in INT2
+}
+ISR(INT0_vect)
+{
+	//RESET STOP WATCH
+	HRS_COUNT=0;
+	MIN_COUNT=0;
+	SEC_COUNT=0;
+}
+ISR(INT1_vect)
+{
+	//PAUSE THE STOP WATCH
+	TCCR1B &=(~(1<<CS11))&(~(1<<CS12))&(~(1<<CS10));//CLOCK OFF
+}
+
+ISR(INT2_vect)
+{
+	//RESUME STOP WATCH COUNTER
+	TCCR1B|=(1<<CS12)|(1<<CS10);//ENABLE CLOCK SOURECE AND PRESCALER AGAIN
+}
+ISR(TIMER1_COMPA_vect)
+{
+	g_tick=1;
+}
+int main()
+{
+	INT_0_1_2_Iint();
+	Timer1_CTC_Iint(1000);
+	DDRA=0x3F;//first 6 pins in portA o/p;
+	DDRC=0x0F;//FIRST 4PINS IN PORTC O/P PINS
+
+	while(1)
+	{
+
+	}
+}

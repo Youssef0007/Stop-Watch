@@ -1,0 +1,20 @@
+#include<avr/io.h>
+#include"util/delay.h"
+
+void Timer1_CTC_Iint(void)
+{
+	TCCR1B=(1<<WGM12);
+}
+
+
+
+int main()
+{
+
+
+
+	while(1)
+	{
+
+	}
+}
